@@ -1,0 +1,9 @@
+name = "job-tracker-app"
+compatibility_date = "2025-10-05"
+pages_build_output_dir = "out"
+
+[env.production]
+name = "job-tracker-app"
+
+[env.preview]
+name = "job-tracker-app-preview"
