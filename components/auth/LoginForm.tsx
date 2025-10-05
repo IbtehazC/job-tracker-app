@@ -37,7 +37,7 @@ export default function LoginForm() {
       await signInWithGoogle();
       toast.success('Welcome back!');
       router.push('/dashboard');
-    } catch (error) {
+    } catch {
       toast.error('Failed to sign in with Google');
     } finally {
       setIsLoading(false);

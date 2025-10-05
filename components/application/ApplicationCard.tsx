@@ -26,7 +26,7 @@ export default function ApplicationCard({ application }: ApplicationCardProps) {
     try {
       await deleteApplication(application.id, application.userId);
       toast.success('Application deleted');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete application');
     }
   };

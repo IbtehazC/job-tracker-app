@@ -44,7 +44,7 @@ export default function SignupForm() {
       await signInWithGoogle();
       toast.success('Account created successfully!');
       router.push('/dashboard');
-    } catch (error) {
+    } catch {
       toast.error('Failed to sign up with Google');
     } finally {
       setIsLoading(false);

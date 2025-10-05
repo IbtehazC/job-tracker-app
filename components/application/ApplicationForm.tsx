@@ -64,7 +64,7 @@ export default function ApplicationForm({ onSuccess }: ApplicationFormProps) {
       });
 
       onSuccess?.();
-    } catch (error) {
+    } catch {
       toast.error('Failed to add application');
     } finally {
       setIsLoading(false);
