@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { User } from '@/types';
-import { getAllUsers } from '@/lib/mock/storage';
+import { getLeaderboard, subscribeToLeaderboard } from '@/lib/firebase/firestore';
 
 export function useLeaderboard(currentUserId?: string) {
   const [users, setUsers] = useState<User[]>([]);
@@ -11,23 +11,20 @@ export function useLeaderboard(currentUserId?: string) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    try {
-      const allUsers = getAllUsers();
-      // Sort by application count descending
-      const sortedUsers = allUsers.sort((a, b) => b.applicationCount - a.applicationCount);
-      setUsers(sortedUsers);
+    // Subscribe to real-time leaderboard updates
+    const unsubscribe = subscribeToLeaderboard((allUsers) => {
+      setUsers(allUsers);
 
       if (currentUserId) {
-        const rank = sortedUsers.findIndex((u) => u.uid === currentUserId) + 1;
+        const rank = allUsers.findIndex((u) => u.uid === currentUserId) + 1;
         setCurrentUserRank(rank);
       }
 
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch leaderboard'));
-    } finally {
       setLoading(false);
-    }
+      setError(null);
+    });
+
+    return () => unsubscribe();
   }, [currentUserId]);
 
   return {

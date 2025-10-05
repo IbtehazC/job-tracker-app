@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Challenge } from '@/types';
-import { getCurrentChallenge } from '@/lib/mock/storage';
+import { getActiveChallenge, subscribeToActiveChallenge } from '@/lib/firebase/firestore';
 import { getTimeRemaining } from '@/lib/utils/date';
 
 export function useChallenge(userApplicationCount: number = 0) {
@@ -11,14 +11,20 @@ export function useChallenge(userApplicationCount: number = 0) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const challenge = getCurrentChallenge();
-    setCurrentChallenge(challenge);
-    setLoading(false);
+    // Subscribe to real-time challenge updates
+    const unsubscribe = subscribeToActiveChallenge((challenge) => {
+      setCurrentChallenge(challenge);
+      setLoading(false);
+    });
 
-    if (challenge) {
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (currentChallenge) {
       // Update countdown every minute
       const updateCountdown = () => {
-        setTimeRemaining(getTimeRemaining(challenge.endDate));
+        setTimeRemaining(getTimeRemaining(currentChallenge.endDate));
       };
 
       updateCountdown();
@@ -26,7 +32,7 @@ export function useChallenge(userApplicationCount: number = 0) {
 
       return () => clearInterval(interval);
     }
-  }, []);
+  }, [currentChallenge]);
 
   const userProgress = currentChallenge ? userApplicationCount : 0;
   const isCompleted = currentChallenge ? userProgress >= currentChallenge.targetCount : false;

@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "preview": "wrangler pages dev out",
-    "deploy": "npm run build && wrangler pages deploy out"
+    "deploy": "npm run build && wrangler pages deploy out",
+    "firebase:init": "tsx scripts/initializeFirebase.ts"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
+    "firebase": "^12.3.0",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "react": "19.1.0",
@@ -27,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5",
     "wrangler": "^4.42.0"
   }

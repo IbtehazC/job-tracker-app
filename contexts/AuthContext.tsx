@@ -1,9 +1,18 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser,
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { createUser, getUser, subscribeToUser } from '@/lib/firebase/firestore';
 import { User } from '@/types';
-import { getCurrentUser, setCurrentUser as saveCurrentUser, getAllUsers, initializeMockData } from '@/lib/mock/storage';
-import { isValidEmail } from '@/lib/utils/validation';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -21,83 +30,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize mock data on mount
-    initializeMockData();
+    // Subscribe to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in, fetch full user data from Firestore
+        const userData = await getUser(firebaseUser.uid);
+        setCurrentUser(userData);
+      } else {
+        // User is signed out
+        setCurrentUser(null);
+      }
+      setLoading(false);
+    });
 
-    // Check for existing user session
-    const user = getCurrentUser();
-    setCurrentUser(user);
-    setLoading(false);
+    return unsubscribe;
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    if (!isValidEmail(email)) {
-      throw new Error('Invalid email address');
-    }
+    // Create Firebase auth user
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
 
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
-    }
-
-    // Check if user already exists
-    const users = getAllUsers();
-    const existingUser = users.find(u => u.email === email);
-
-    if (existingUser) {
-      throw new Error('User already exists with this email');
-    }
-
-    // Create new user
+    // Create user document in Firestore
     const username = email.split('@')[0];
-    const newUser: User = {
-      uid: Date.now().toString(),
-      email,
+    await createUser(firebaseUser.uid, {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email || email,
       username,
-      displayName: username,
-      photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+      displayName: firebaseUser.displayName || username,
+      photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
       applicationCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    });
 
-    // Save to users list
-    users.push(newUser);
-    localStorage.setItem('job_tracker_users', JSON.stringify(users));
-
-    // Set as current user
-    saveCurrentUser(newUser);
-    setCurrentUser(newUser);
+    // Fetch and set the newly created user
+    const userData = await getUser(firebaseUser.uid);
+    setCurrentUser(userData);
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!isValidEmail(email)) {
-      throw new Error('Invalid email address');
-    }
+    // Sign in with Firebase
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    // Find user
-    const users = getAllUsers();
-    const user = users.find(u => u.email === email);
-
-    if (!user) {
-      throw new Error('No user found with this email');
-    }
-
-    // In mock mode, we don't verify password
-    saveCurrentUser(user);
-    setCurrentUser(user);
+    // Fetch user data from Firestore
+    const userData = await getUser(userCredential.user.uid);
+    setCurrentUser(userData);
   };
 
   const signInWithGoogle = async () => {
-    // Simulate Google sign-in by using a pre-existing user
-    const users = getAllUsers();
-    const googleUser = users[0]; // Use first mock user
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const firebaseUser = userCredential.user;
 
-    saveCurrentUser(googleUser);
-    setCurrentUser(googleUser);
+    // Check if user document exists
+    let userData = await getUser(firebaseUser.uid);
+
+    if (!userData) {
+      // Create user document if it doesn't exist
+      const username = firebaseUser.email?.split('@')[0] || 'user';
+      await createUser(firebaseUser.uid, {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        username,
+        displayName: firebaseUser.displayName || username,
+        photoURL: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+        applicationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      userData = await getUser(firebaseUser.uid);
+    }
+
+    setCurrentUser(userData);
   };
 
   const signOut = async () => {
-    saveCurrentUser(null);
+    await firebaseSignOut(auth);
     setCurrentUser(null);
   };
 
