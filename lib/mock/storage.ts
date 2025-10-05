@@ -50,8 +50,8 @@ export function getAllUsers(): User[] {
   const usersData = localStorage.getItem(STORAGE_KEYS.USERS);
   if (!usersData) return [];
 
-  const users = JSON.parse(usersData);
-  return users.map((user: any) => ({
+  const users = JSON.parse(usersData) as User[];
+  return users.map((user) => ({
     ...user,
     createdAt: new Date(user.createdAt),
     updatedAt: new Date(user.updatedAt),
@@ -87,12 +87,12 @@ export function getAllApplications(): Application[] {
   const appsData = localStorage.getItem(STORAGE_KEYS.APPLICATIONS);
   if (!appsData) return [];
 
-  const apps = JSON.parse(appsData);
-  return apps.map((app: any) => ({
+  const apps = JSON.parse(appsData) as Application[];
+  return apps.map((app) => ({
     ...app,
     appliedAt: new Date(app.appliedAt),
     createdAt: new Date(app.createdAt),
-  })).sort((a: Application, b: Application) => b.appliedAt.getTime() - a.appliedAt.getTime());
+  })).sort((a, b) => b.appliedAt.getTime() - a.appliedAt.getTime());
 }
 
 export function addApplication(application: Omit<Application, 'id' | 'createdAt'>): Application {

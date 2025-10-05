@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -9,7 +8,6 @@ import { LogIn, UserPlus } from 'lucide-react';
 
 export default function PublicHeader() {
   const { currentUser } = useAuth();
-  const pathname = usePathname();
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
