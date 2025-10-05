@@ -26,12 +26,21 @@ This guide will help you deploy your Job Tracker app to Cloudflare Pages.
    - Deploy the `out` directory to Cloudflare Pages
 
 3. **Follow the prompts**
-   - You'll be asked to name your project (or it will use "job-tracker-app")
-   - Select your production branch (usually "main" or "master")
+   - First deployment: You'll be asked to create a new project
+   - Enter a project name (e.g., "job-tracker-app")
+   - Wrangler will create the project and deploy
 
 4. **Access your site**
    - Once deployed, you'll get a URL like: `https://job-tracker-app.pages.dev`
    - Your site is now live!
+
+**Alternative: Direct Command**
+
+If you prefer to specify everything in one command:
+```bash
+npm run build
+npx wrangler pages deploy out --project-name=job-tracker-app
+```
 
 ### Option 2: Deploy via Cloudflare Dashboard
 
